@@ -1,0 +1,28 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © AlgoTrade_Pro
+//@version=5
+indicator('BH Ergodic MT4 [ATP]', shorttitle='BH Ergodic', overlay=false)
+
+Bres = input.timeframe(title='Resolution', defval='')
+Blength1 = input.int(title='First EMA Period', defval=10, minval=1)
+Blength2 = input.int(title='Second EMA Period', defval=20, minval=1)
+Blength3 = input.int(title='Third EMA Period', defval=30, minval=1)
+sigLength = input.int(title='Signal EMA Period', defval=25, minval=1)
+inp = input(title='Source', defval=close)
+
+Brep = false
+Bsrc = request.security(syminfo.tickerid, Bres, inp[Brep ? 0 : barstate.isrealtime ? 1 : 0])[Brep ? 0 : barstate.isrealtime ? 0 : 1]
+
+Bma = ta.ema(Bsrc, Blength1)
+diff = Bsrc - Bma
+diffMa = ta.ema(diff, Blength2)
+BH_TSI = ta.ema(diffMa, Blength3)
+BH_Signal = ta.ema(BH_TSI, sigLength)
+
+// Plots 
+plot(BH_TSI, title='TSI', color=color.blue, linewidth=2)
+plot(BH_Signal, title='Signal', color=color.red, linewidth=2)
+plotshape((ta.crossover(BH_TSI, BH_Signal)) ? BH_TSI  : na, title = "BUY", color = color.yellow, textcolor = color.blue, text = "B", style = shape.circle, location = location.bottom, size = size.auto)
+plotshape((ta.crossunder(BH_TSI, BH_Signal)) ? BH_Signal  : na, title = "SELL", color = color.yellow, textcolor = color.red, text = "S", style = shape.circle, location = location.top, size = size.auto)
+background = BH_TSI < BH_Signal ? #ff000011 : BH_TSI > BH_Signal ? #0066ff12 : na
+bgcolor(color=background)
